@@ -56,8 +56,8 @@ func (d *retryWorkerPool[T, R]) Run(timeout time.Duration, threads int) []result
 		d.workers[i].stop()
 	}
 
-	close(d.inputChannel)
-	close(d.finishChannel)
+	defer close(d.inputChannel)
+	defer close(d.finishChannel)
 
 	return d.results
 }
