@@ -19,16 +19,16 @@ type retryWorkerPool[T any, R any] struct {
 	inputChannel  chan T
 	finishChannel chan bool
 
-	work           func(inputArg T) R
-	errorCondition func(result R) bool
-	quit           bool
+	workFn       func(inputArg T) R
+	errorCheckFn func(result R) bool
+	quit         bool
 }
 
 func CreateRetryWorkPool[T any, R any](inputArr []T, workFn func(inputArg T) R, errorConditionFn func(result R) bool) retryWorkerPool[T, R] {
 	return retryWorkerPool[T, R]{
-		inputArr:       inputArr,
-		work:           workFn,
-		errorCondition: errorConditionFn,
+		inputArr:     inputArr,
+		workFn:       workFn,
+		errorCheckFn: errorConditionFn,
 	}
 }
 
@@ -43,7 +43,7 @@ func (d *retryWorkerPool[T, R]) Run(timeout time.Duration, threads int) []result
 	for i := 0; i < threads; i++ {
 		retriever := new(retrieveWorker[T, R]).prepare()
 		go retriever.runRetrieving(d.inputChannel, d.inputArr,
-			d.work, d.errorCondition, d.retry, d.saveResult)
+			d.workFn, d.errorCheckFn, d.retry, d.saveResult)
 
 		d.workers = append(d.workers, retriever)
 	}

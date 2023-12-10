@@ -5,21 +5,22 @@ type retrieveWorker[T any, R any] struct {
 }
 
 func (w retrieveWorker[T, R]) runRetrieving(inputChannel <-chan T,
-	inputArray []T, work func(input T) R,
-	errorCondition func(result R) bool,
-	errorCallback func(inputArg T), resultCallback func(r result[T, R])) {
+	inputArray []T, workFn func(input T) R,
+	errorCheckFn func(result R) bool,
+	errorCallbackFn func(inputArg T),
+	resultCallbackFn func(r result[T, R])) {
 
 	for {
 		select {
 		case inputArg := <-inputChannel:
-			res := work(inputArg)
+			res := workFn(inputArg)
 
-			isError := errorCondition(res)
+			isError := errorCheckFn(res)
 
 			if isError {
-				errorCallback(inputArg)
+				errorCallbackFn(inputArg)
 			} else {
-				resultCallback(result[T, R]{
+				resultCallbackFn(result[T, R]{
 					input:  inputArg,
 					output: res,
 				})

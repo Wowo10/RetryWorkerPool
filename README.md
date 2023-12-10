@@ -32,4 +32,4 @@ fmt.Println("ResultArr:", result)
 fmt.Println("ResultArrLength:", len(result))
 ```
 
-Beershare license
+Mostly created for education purposes. But might be somebody would benefit from the package.
