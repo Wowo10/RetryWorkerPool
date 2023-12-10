@@ -1,9 +1,10 @@
 package retryworkerpool_test
 
 import (
-	retryworkerpool "retryWorkerPool"
 	"testing"
 	"time"
+
+	retryworkerpool "github.com/Wowo10/RetryWorkerPool"
 )
 
 func Test_Run(t *testing.T) {
