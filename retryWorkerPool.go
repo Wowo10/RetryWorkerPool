@@ -21,6 +21,7 @@ type retryWorkerPool[T any, R any] struct {
 
 	work           func(inputArg T) R
 	errorCondition func(result R) bool
+	quit           bool
 }
 
 func CreateRetryWorkPool[T any, R any](inputArr []T, workFn func(inputArg T) R, errorConditionFn func(result R) bool) retryWorkerPool[T, R] {
@@ -52,6 +53,8 @@ func (d *retryWorkerPool[T, R]) Run(timeout time.Duration, threads int) []result
 	case <-time.After(timeout):
 	}
 
+	d.quit = true
+
 	for i := range d.workers {
 		d.workers[i].stop()
 	}
@@ -67,14 +70,18 @@ func (d *retryWorkerPool[T, R]) saveResult(r result[T, R]) {
 
 	d.results = append(d.results, r)
 
-	if len(d.results) == len(d.inputArr) {
+	if len(d.results) == len(d.inputArr) && !d.quit {
 		d.finishChannel <- true
 	}
 	d.mutex.Unlock()
 }
 
 func (d *retryWorkerPool[T, R]) retry(inputArg T) {
+	if d.quit {
+		return
+	}
+
 	retryWorker := new(retryWorker[T]).prepare()
-	go retryWorker.runRetry(d.inputChannel, inputArg)
 	d.workers = append(d.workers, retryWorker)
+	go retryWorker.runRetry(d.inputChannel, inputArg)
 }
